@@ -51,7 +51,9 @@ export default class Virtual {
 
   // return current render range
   getRange () {
+    // 返回一个新的对象
     const range = Object.create(null)
+    // 设置 range 的 start 和 end
     range.start = this.range.start
     range.end = this.range.end
     range.padFront = this.range.padFront
@@ -60,28 +62,36 @@ export default class Virtual {
   }
 
   isBehind () {
+    // 如果当前方向是向下滚动，那么就是向后
     return this.direction === DIRECTION_TYPE.BEHIND
   }
 
   isFront () {
+    // 如果当前方向是向上滚动，那么就是向前
     return this.direction === DIRECTION_TYPE.FRONT
   }
 
   // return start index offset
   getOffset (start) {
+    // 如果 start 小于 1，那么就返回 0，否则就是获取当前 index 的偏移量
     return (start < 1 ? 0 : this.getIndexOffset(start)) + this.param.slotHeaderSize
   }
 
   updateParam (key, value) {
+    // 判断参数是否存在，然后就是 key 是否在 param 中
+    // 这里的 key 就是上面传递的 uniqueIds
     if (this.param && (key in this.param)) {
       // if uniqueIds change, find out deleted id and remove from size map
+      // 如果 uniqueIds 发生了改变，那么就需要找出被删除的 id 并且从 size map 中移除
       if (key === 'uniqueIds') {
+        // 从 size 中找到不在 value 中的 key 并且删除
         this.sizes.forEach((v, key) => {
           if (!value.includes(key)) {
             this.sizes.delete(key)
           }
         })
       }
+      // 更新 param 中的 key
       this.param[key] = value
     }
   }
@@ -117,16 +127,23 @@ export default class Virtual {
   // in some special situation (e.g. length change) we need to update in a row
   // try goiong to render next range by a leading buffer according to current direction
   handleDataSourcesChange () {
+    // 获取 range 中的 start
     let start = this.range.start
 
+    // 如果向上滚动，那么就减去一个 LEADING_BUFFER
     if (this.isFront()) {
       start = start - LEADING_BUFFER
     } else if (this.isBehind()) {
+      // 如果向下滚动，那么就加上一个 LEADING_BUFFER
       start = start + LEADING_BUFFER
     }
 
+    // 保证 start 大于等于 0
     start = Math.max(start, 0)
 
+    // 重新计算 end
+    // start 则是 start + param.keeps - 1
+    // end 是 start 和 getLastIndex() 的最小值
     this.updateRange(this.range.start, this.getEndByStart(start))
   }
 
@@ -213,18 +230,24 @@ export default class Virtual {
   // return a scroll offset from given index, can efficiency be improved more here?
   // although the call frequency is very high, its only a superposition of numbers
   getIndexOffset (givenIndex) {
+    // 如果给定的偏移量不存在，那么就返回 0
     if (!givenIndex) {
       return 0
     }
 
+    // 定义一个偏移量
     let offset = 0
     let indexSize = 0
+    // 遍历给定的 index
     for (let index = 0; index < givenIndex; index++) {
       // this.__getIndexOffsetCalls++
+      // 获取到当前 index 的大小
       indexSize = this.sizes.get(this.param.uniqueIds[index])
+        // 如果 indexSize 存在，那么就加上 indexSize
       offset = offset + (typeof indexSize === 'number' ? indexSize : this.getEstimateSize())
     }
 
+    // 返回偏移量
     return offset
   }
 
@@ -235,6 +258,7 @@ export default class Virtual {
 
   // return the real last index
   getLastIndex () {
+    // 获取所有的数据长度 - 1
     return this.param.uniqueIds.length - 1
   }
 
@@ -260,25 +284,37 @@ export default class Virtual {
 
   // setting to a new range and rerender
   updateRange (start, end) {
+    // 设置 range 的 start 和 end
     this.range.start = start
     this.range.end = end
+    // 设置 range 的 padFront 和 padBehind
     this.range.padFront = this.getPadFront()
+    // 返回当前 range 的 end
     this.range.padBehind = this.getPadBehind()
+    // 调用 callUpdate
     this.callUpdate(this.getRange())
   }
 
   // return end base on start
   getEndByStart (start) {
+    // start 的值加上要保留的数据,默认是 30 个,即保留 30 个真实数据
     const theoryEnd = start + this.param.keeps - 1
+    // 真正的 end
+    // 如果还没有到最后一个元素,那么就选择当前计算出来的 end,否则就是最后一个元素
     const truelyEnd = Math.min(theoryEnd, this.getLastIndex())
+    // 返回计算出来的最大的 end
     return truelyEnd
   }
 
   // return total front offset
   getPadFront () {
+    // 如果是固定的大小
     if (this.isFixedType()) {
+      // 返回当前 range 的 start 的偏移量
+      // 固定的大小 * range 的 start
       return this.fixedSizeValue * this.range.start
     } else {
+      // 返回当前 range 的 start 的偏移量
       return this.getIndexOffset(this.range.start)
     }
   }
@@ -297,6 +333,7 @@ export default class Virtual {
 
   // get the item estimate size
   getEstimateSize () {
+    // 如果是固定的大小，那么就返回固定的大小，否则返回平均的大小
     return this.isFixedType() ? this.fixedSizeValue : (this.firstRangeAverageSize || this.param.estimateSize)
   }
 }
