@@ -26,6 +26,7 @@ const VirtualList = Vue.component('virtual-list', {
   },
 
   watch: {
+    // 当元数据的长度发生改变的时候去更新 virtual 的参数
     'dataSources.length' () {
       this.virtual.updateParam('uniqueIds', this.getUniqueIdFromDataSources())
       this.virtual.handleDataSourcesChange()
@@ -46,17 +47,20 @@ const VirtualList = Vue.component('virtual-list', {
   },
 
   created () {
+    // 判断当前的方向是不是水平方向
     this.isHorizontal = this.direction === 'horizontal'
+    // 根据方向设置滚动属性键名
     this.directionKey = this.isHorizontal ? 'scrollLeft' : 'scrollTop'
 
+    // 安装虚拟滚动
     this.installVirtual()
 
-    // listen item size change
+    // 监听项目尺寸变化
     this.$on(EVENT_TYPE.ITEM, this.onItemResized)
 
-    // listen slot size change
+    // 监听插槽尺寸变化
     if (this.$slots.header || this.$slots.footer) {
-      this.$on(EVENT_TYPE.SLOT, this.onSlotResized)
+    this.$on(EVENT_TYPE.SLOT, this.onSlotResized)
     }
   },
 
@@ -318,11 +322,17 @@ const VirtualList = Vue.component('virtual-list', {
 
   // render function, a closer-to-the-compiler alternative to templates
   // https://vuejs.org/v2/guide/render-function.html#The-Data-Object-In-Depth
+  // 当元素渲染的时候
   render (h) {
+    // 从 solts 中获取 header 和 footer
     const { header, footer } = this.$slots
+    // 获取 range，这里面包含了从哪些元素开始，到哪些元素结束
     const { padFront, padBehind } = this.range
+    // 获取元素信息
     const { isHorizontal, pageMode, rootTag, wrapTag, wrapClass, wrapStyle, headerTag, headerClass, headerStyle, footerTag, footerClass, footerStyle } = this
+    // 获取 padding 的样式
     const paddingStyle = { padding: isHorizontal ? `0px ${padBehind}px 0px ${padFront}px` : `${padFront}px 0px ${padBehind}px` }
+    // 获取包装器的样式
     const wrapperStyle = wrapStyle ? Object.assign({}, wrapStyle, paddingStyle) : paddingStyle
 
     return h(rootTag, {
